@@ -47,6 +47,13 @@ class NotesFragment : BaseFragment<NotesViewModel, FragmentNoteBinding>() {
                 if (it != null) {
                     val data = it.sortedBy {sort-> sort.createdDate }.reversed()
                     notesAdapter.updateData(data)
+                    if (data.isEmpty()) {
+                        binding.placeholderLabel.visibility = View.VISIBLE
+                    } else {
+                        binding.placeholderLabel.visibility = View.GONE
+                    }
+                }else{
+                    binding.placeholderLabel.visibility = View.VISIBLE
                 }
             })
             deleteNote.observe(this@NotesFragment, Observer {
@@ -57,6 +64,7 @@ class NotesFragment : BaseFragment<NotesViewModel, FragmentNoteBinding>() {
             error.observe(this@NotesFragment, Observer {
                 animation.stopShimmer();
                 animation.visibility = View.GONE
+                binding.placeholderLabel.visibility = View.VISIBLE
             })
         }
     }

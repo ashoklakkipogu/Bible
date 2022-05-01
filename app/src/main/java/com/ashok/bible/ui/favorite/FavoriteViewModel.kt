@@ -5,7 +5,7 @@ import androidx.lifecycle.Observer
 import com.ashok.bible.data.local.entry.FavoriteModelEntry
 import com.ashok.bible.data.local.repositary.DbRepository
 import com.ashok.bible.data.remote.network.ApiError
-import com.lakki.kotlinlearning.view.base.BaseViewModel
+import com.ashok.bible.ui.base.BaseViewModel
 import javax.inject.Inject
 
 class FavoriteViewModel @Inject constructor(

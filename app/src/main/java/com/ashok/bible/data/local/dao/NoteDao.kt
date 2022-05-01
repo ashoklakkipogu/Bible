@@ -3,6 +3,7 @@ package com.ashok.favorite.data.local.dao
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
+import com.ashok.bible.data.local.entry.FavoriteModelEntry
 import com.ashok.bible.data.local.entry.NoteModelEntry
 import io.reactivex.Observable
 
@@ -29,4 +30,7 @@ interface NoteDao {
 
     @Query("DELETE FROM note WHERE id = :id")
     fun deleteNoteById(id: Int)
+
+    @Query("SELECT * FROM note WHERE bibleId =:bibleId")
+    fun getNotesById(bibleId: Int): LiveData<NoteModelEntry>
 }

@@ -20,8 +20,8 @@
         android:icon="@drawable/ic_notes_24dp"
         android:title="@string/title_notes" />
     <item
-        android:id="@+id/navigation_lyric"
-        android:icon="@drawable/lyrics"
-        android:title="@string/title_lyrics" />
+        android:id="@+id/navigation_quotes"
+        android:icon="@drawable/icons_quote"
+        android:title="@string/title_quotes" />
 
 </menu>

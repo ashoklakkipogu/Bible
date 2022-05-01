@@ -1,18 +1,15 @@
 package com.ashok.bible.ui
 
 import android.app.AlertDialog
-import android.content.Context
 import android.content.SharedPreferences
-import android.content.res.AssetManager
-import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.ashok.bible.data.local.entry.*
 import com.ashok.bible.data.local.repositary.DbRepository
-import com.ashok.bible.data.remote.model.CarouselModel
+import com.ashok.bible.data.remote.model.BaseModel
+import com.ashok.bible.data.remote.model.QuotesModel
+import com.ashok.bible.data.remote.model.UserModel
 import com.ashok.bible.data.remote.network.ApiError
-import com.ashok.bible.ui.home.HomeFragment
 import com.ashok.bible.utils.DialogBuilder
 import com.ashok.bible.utils.DialogListenerForLanguage
 import com.ashok.bible.utils.SharedPrefUtils
@@ -21,11 +18,8 @@ import com.ashok.favorite.data.local.dao.FavoriteDao
 import com.ashok.favorite.data.local.dao.HighlightDao
 import com.ashok.favorite.data.local.dao.NoteDao
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.lakki.kotlinlearning.data.remote.repositary.AppRepository
-import com.lakki.kotlinlearning.view.base.BaseViewModel
-import java.io.IOException
-import java.io.InputStream
+import com.ashok.bible.ui.base.BaseViewModel
 import javax.inject.Inject
 
 class MainViewModel @Inject constructor(
@@ -46,6 +40,8 @@ class MainViewModel @Inject constructor(
     val insertFav: MutableLiveData<Unit> by lazy { MutableLiveData<Unit>() }
     val insertNotes: MutableLiveData<Unit> by lazy { MutableLiveData<Unit>() }
     val insertHighlight: MutableLiveData<Unit> by lazy { MutableLiveData<Unit>() }
+    val userData: MutableLiveData<BaseModel> by lazy { MutableLiveData<BaseModel>() }
+
 
     fun insertFavorites(favList: ArrayList<FavoriteModelEntry>) {
         dbRepository.insertAllFav(
@@ -126,5 +122,14 @@ class MainViewModel @Inject constructor(
                 }
 
             })
+    }
+
+    fun saveUser(obj: UserModel) {
+        appRepository.saveUser(obj, {
+            userData.value = it
+
+        }, {
+            error.value = it
+        }).also { compositeDisposable.add(it) }
     }
 }

@@ -19,6 +19,7 @@
     android:text='@{obj.versecount+" "}'-->
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
@@ -45,8 +46,8 @@
                 android:text='@{""+obj}'
                 android:textStyle="bold"
                 android:onClick="@{(v)->handlers.onClick(v, obj)}"
-                android:textColor="@color/color_2"
-                android:textSize="16sp"
+                android:textColor="@color/white"
+                android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

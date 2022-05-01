@@ -1,14 +1,18 @@
 package com.ashok.bible.ui.adapter
 
 import android.content.Context
+import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.widget.Filter
 import android.widget.Filterable
 import com.ashok.bible.R
 import com.ashok.bible.data.local.entry.BibleIndexModelEntry
 import com.ashok.bible.data.local.entry.BibleModelEntry
+import com.ashok.bible.databinding.BibleIndexNumberRowBinding
+import com.ashok.bible.databinding.BibleIndexRowBinding
 import com.ashok.bible.ui.bibleindex.BibleIndexActivity
 import com.ashok.bible.ui.model.BibleNumberIndexModel
+import com.ashok.bible.utils.Utils
 import com.lakki.kotlinlearning.view.base.RecyclerBaseAdapter
 
 
@@ -61,6 +65,13 @@ class BibleIndexNumberAdapter constructor(var mContext: BibleIndexActivity?, var
                 notifyDataSetChanged()
             }
         }
+
+    }
+
+    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        super.onBindViewHolder(holder, position)
+        val view = holder.binding as BibleIndexNumberRowBinding
+        view.container.setCardBackgroundColor(Utils.colorCodeByPos(mContext, position))
 
     }
     public fun onClick(view: View, chaptertId:Int){

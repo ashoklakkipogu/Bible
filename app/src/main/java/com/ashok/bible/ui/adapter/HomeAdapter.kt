@@ -1,14 +1,14 @@
 package com.ashok.bible.ui.adapter
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.BackgroundColorSpan
-import android.text.style.ForegroundColorSpan
 import android.text.style.UnderlineSpan
-import android.util.Log
 import android.view.View
 import android.widget.Filter
 import android.widget.Filterable
@@ -21,23 +21,23 @@ import com.ashok.bible.data.local.entry.FavoriteModelEntry
 import com.ashok.bible.data.local.entry.HighlightModelEntry
 import com.ashok.bible.data.local.entry.NoteModelEntry
 import com.ashok.bible.databinding.HomeRowBinding
+import com.ashok.bible.ui.details.DetailsActivity
 import com.ashok.bible.ui.home.HomeFragment
 import com.ashok.bible.utils.*
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.lakki.kotlinlearning.view.base.RecyclerBaseAdapter
 import java.util.*
 import kotlin.collections.ArrayList
 
+
 class HomeAdapter(
-    internal var mContext: HomeFragment,
-    var tts: TtsManager?,
-    var lng: Locale,
-    var pref: SharedPreferences,
-    var analytics: FirebaseAnalytics,
-    var list: ArrayList<BibleModelEntry>,
-    var originalList: ArrayList<BibleModelEntry> = list
+        internal var mContext: HomeFragment,
+        var tts: TtsManager?,
+        var lng: Locale,
+        var pref: SharedPreferences,
+        var list: ArrayList<BibleModelEntry>,
+        var originalList: ArrayList<BibleModelEntry> = list
 ) :
-    RecyclerBaseAdapter<BibleModelEntry?>(), Filterable {
+        RecyclerBaseAdapter<BibleModelEntry?>(), Filterable {
 
     var selectedItems = mutableSetOf<Int>()
     var currentPos: Int = 0
@@ -63,6 +63,9 @@ class HomeAdapter(
         super.onBindViewHolder(holder, position)
         var view = holder.binding as HomeRowBinding
         val book = list[position]
+        val gradientDrawable = (view.indexBgView.background as GradientDrawable).mutate()
+        (gradientDrawable as GradientDrawable).setColor(Utils.colorCodeByPos(mContext.context, position))
+
 
         val favObjs = favList.filter {
             book.id == it.bibleId
@@ -87,40 +90,40 @@ class HomeAdapter(
         }
 
 
-
         val builder = SpannableStringBuilder()
-        val str1 = SpannableString("${book.Versecount}. ")
-        str1.setSpan(
+        //val str1 = SpannableString("${book.Versecount}. ")
+        view.indexText.text = book.Versecount.toString()
+        /*str1.setSpan(
             ForegroundColorSpan(ContextCompat.getColor(mContext?.activity!!, R.color.colorAccent)),
             0,
             str1.length,
             0
         );
-        builder.append(str1);
+        builder.append(str1);*/
         val verseStr = book.verse
         /*builder.append(book.verse)
         view.verseText.setText(builder, TextView.BufferType.SPANNABLE);*/
 
-        if (highlightList.isNotEmpty()){
+        if (highlightList.isNotEmpty()) {
             if (highlightObjs.isNotEmpty()) {
                 val color = highlightObjs[0].color
                 val span = SpannableString(verseStr)
-                if (color.isNotEmpty()){
+                if (color.isNotEmpty()) {
                     span.setSpan(BackgroundColorSpan(Color.parseColor(color)), 0, verseStr.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     builder.append(span)
                     view.verseText.setText(builder, TextView.BufferType.SPANNABLE);
-                }else{
+                } else {
                     span.setSpan(UnderlineSpan(), 0, span.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     builder.append(span)
                     view.verseText.setText(builder, TextView.BufferType.SPANNABLE);
                 }
-            }else{
+            } else {
                 builder.append(verseStr)
-                view.verseText.setText(builder, TextView.BufferType.SPANNABLE);
+                view.verseText.setText(verseStr);
             }
-        }else{
-            builder.append(verseStr)
-            view.verseText.setText(builder, TextView.BufferType.SPANNABLE);
+        } else {
+            //builder.append(verseStr)
+            view.verseText.setText(verseStr);
         }
 
 
@@ -132,10 +135,10 @@ class HomeAdapter(
                 view.viewGroup.visibility = View.GONE
             }
             view.verseText.setBackgroundColor(
-                ContextCompat.getColor(
-                    mContext?.activity!!,
-                    R.color.color_1
-                )
+                    ContextCompat.getColor(
+                            mContext?.activity!!,
+                            R.color.color_1
+                    )
             )
         } else {
             view.viewGroup.visibility = View.GONE
@@ -149,13 +152,33 @@ class HomeAdapter(
         } else {
             view.chapterText.visibility = View.GONE
         }
-        mContext?.updateBibleIndex(book.Chapter, book.Book)
+        view.container.setOnLongClickListener(object : View.OnLongClickListener {
+            override fun onLongClick(p0: View?): Boolean {
+                currentPos = position
+                selectedItems.add(position)
+                notifyDataSetChanged()
+                return true;
+            }
 
+        })
 
         view.container.setOnClickListener {
-            currentPos = position
+            val bibleObj = list[position]
+            val id = bibleObj.id
+            val book = bibleObj.Book
+            val chapter = bibleObj.Chapter
+            val verseCount = bibleObj.Versecount
+            val verse = bibleObj.verse
+            val intent = Intent(mContext.context, DetailsActivity::class.java)
+            intent.putExtra("id", id)
+            intent.putExtra("book", book)
+            intent.putExtra("chapter", chapter)
+            intent.putExtra("verseCount", verseCount)
+            intent.putExtra("verse", verse)
+            mContext.startActivity(intent)
+            /*currentPos = position
             selectedItems.add(position)
-            notifyDataSetChanged()
+            notifyDataSetChanged()*/
         }
         view.closeBtn.setOnClickListener {
             clearSelection()
@@ -186,103 +209,104 @@ class HomeAdapter(
 
     private fun showDialog() {
         DialogBuilder.showChapterDialog(
-            mContext?.activity!!,
-            object : DialogListenerForBookMark {
+                mContext?.activity!!,
+                object : DialogListenerForBookMark {
 
-                override fun dialogBookMark() {
-                    if (selectedItems.isNotEmpty()) {
-                        var favList: ArrayList<FavoriteModelEntry> = ArrayList()
-                        for (values in selectedItems) {
-                            val favObj = FavoriteModelEntry()
-                            val bibleObj = list[values]
-                            favObj.bibleId = bibleObj.id
-                            favObj.book = bibleObj.Book
-                            favObj.chapter = bibleObj.Chapter
-                            favObj.versecount = bibleObj.Versecount
-                            favObj.verse = bibleObj.verse
-                            favObj.createdDate = Utils.getStringTimeStampWithDate()
-                            favObj.bibleIndexName =
-                                "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
-                            Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.FAVORITE)
-                            favList.add(favObj)
+                    override fun dialogBookMark() {
+                        if (selectedItems.isNotEmpty()) {
+                            var favList: ArrayList<FavoriteModelEntry> = ArrayList()
+                            for (values in selectedItems) {
+                                val favObj = FavoriteModelEntry()
+                                val bibleObj = list[values]
+                                favObj.bibleId = bibleObj.id
+                                favObj.book = bibleObj.Book
+                                favObj.chapter = bibleObj.Chapter
+                                favObj.versecount = bibleObj.Versecount
+                                favObj.verse = bibleObj.verse
+                                favObj.createdDate = Utils.getStringTimeStampWithDate()
+                                favObj.bibleIndexName =
+                                        "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
+                                //Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.FAVORITE)
+                                favList.add(favObj)
 
-                        }
-                        mContext.insertFavorites(favList)
-                    }
-                    clearSelection()
-                }
-
-                override fun dialogNote() {
-                    DialogBuilder.showNoteDialog(
-                        mContext.activity!!,
-                        object : DialogListenerForNote {
-                            override fun dialogNote(noteTxt: String) {
-                                if (selectedItems.isNotEmpty()) {
-                                    var noteList: ArrayList<NoteModelEntry> = ArrayList()
-                                    for (values in selectedItems) {
-                                        val noteObj = NoteModelEntry()
-                                        val bibleObj = list[values]
-                                        noteObj.bibleId = bibleObj.id
-                                        noteObj.book = bibleObj.Book
-                                        noteObj.chapter = bibleObj.Chapter
-                                        noteObj.versecount = bibleObj.Versecount
-                                        noteObj.verse = bibleObj.verse
-                                        noteObj.createdDate = Utils.getStringTimeStampWithDate()
-                                        noteObj.noteName = noteTxt
-                                        noteObj.bibleIndexName =
-                                            "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
-                                        Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.NOTES)
-                                        noteList.add(noteObj)
-                                    }
-                                    mContext.insertNotes(noteList)
-                                }
-                                clearSelection()
                             }
-                        })
-                }
-
-                override fun dialogSelectedColor(color: String) {
-                    setHighlightData(color)
-                }
-
-                override fun dialogHighLight() {
-                    setHighlightData(null)
-                }
-
-                override fun dialogShare() {
-                    if (selectedItems.isNotEmpty()) {
-                        val strBuilder =StringBuilder()
-                        for (values in selectedItems) {
-                            val bibleObj = list[values]
-                            Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.SHARE)
-                            val bibleIndex = "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
-                            val verse = bibleObj.verse
-                            strBuilder.append("$bibleIndex - $verse")
-                            strBuilder.append("\n");
-
-
+                            mContext.insertFavorites(favList)
                         }
-                        Utils.shareText(mContext.activity, strBuilder.toString())
+                        clearSelection()
                     }
-                }
 
-                override fun dialogCopy() {
-                    if (selectedItems.isNotEmpty()) {
-                        val strBuilder =StringBuilder()
-                        for (values in selectedItems) {
-                            val bibleObj = list[values]
-                            Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.COPY)
-                            val bibleIndex = "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
-                            val verse = bibleObj.verse
-                            strBuilder.append("$bibleIndex - $verse")
-                            strBuilder.append("\n");
+                    override fun dialogNote() {
+                        DialogBuilder.showNoteDialog(
+                                mContext.activity!!,
+                                object : DialogListenerForNote {
+                                    override fun dialogNote(noteTxt: String) {
+                                        if (selectedItems.isNotEmpty()) {
+                                            var noteList: ArrayList<NoteModelEntry> = ArrayList()
+                                            for (values in selectedItems) {
+                                                val noteObj = NoteModelEntry()
+                                                val bibleObj = list[values]
+                                                noteObj.bibleId = bibleObj.id
+                                                noteObj.book = bibleObj.Book
+                                                noteObj.chapter = bibleObj.Chapter
+                                                noteObj.versecount = bibleObj.Versecount
+                                                noteObj.verse = bibleObj.verse
+                                                noteObj.createdDate = Utils.getStringTimeStampWithDate()
+                                                noteObj.noteName = noteTxt
+                                                noteObj.bibleIndexName =
+                                                        "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
+                                                //Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.NOTES)
+                                                noteList.add(noteObj)
+                                            }
+                                            mContext.insertNotes(noteList)
+                                        }
+                                        clearSelection()
+                                    }
+                                })
+                    }
+
+                    override fun dialogSelectedColor(color: String) {
+                        setHighlightData(color)
+                    }
+
+                    override fun dialogHighLight() {
+                        setHighlightData(null)
+                    }
+
+                    override fun dialogShare() {
+                        if (selectedItems.isNotEmpty()) {
+                            val strBuilder = StringBuilder()
+                            for (values in selectedItems) {
+                                val bibleObj = list[values]
+                                //Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.SHARE)
+                                val bibleIndex = "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
+                                val verse = bibleObj.verse
+                                strBuilder.append("$verse \n- $bibleIndex")
+                                strBuilder.append("\n");
 
 
+                            }
+                            Utils.shareText(mContext.activity, strBuilder.toString())
                         }
-                        Utils.copyText(mContext.activity, strBuilder.toString())
                     }
-                }
-            })
+
+                    override fun dialogCopy() {
+                        if (selectedItems.isNotEmpty()) {
+                            val strBuilder = StringBuilder()
+                            for (values in selectedItems) {
+                                val bibleObj = list[values]
+                                //Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.COPY)
+                                val bibleIndex = "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
+                                val verse = bibleObj.verse
+                                strBuilder.append("$verse \n- $bibleIndex")
+                                strBuilder.append("\n");
+
+
+                            }
+                            Utils.copyText(mContext.activity, strBuilder.toString())
+                            mContext.showSnackbar("Copied")
+                        }
+                    }
+                })
     }
 
     private fun setHighlightData(color: String?) {
@@ -299,10 +323,10 @@ class HomeAdapter(
                 if (color != null) {
                     highlightObj.color = color
                 }
-                Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.HIGHLIGHT)
+                //Utils.customEvent(analytics, pref, bibleObj.Book, bibleObj.Chapter, bibleObj.Versecount, bibleObj.verse, bibleObj.id, AppConstants.HIGHLIGHT)
                 highlightObj.createdDate = Utils.getStringTimeStampWithDate()
                 highlightObj.bibleIndexName =
-                    "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
+                        "${mContext.getBibleIndexName(bibleObj.Book)} ${bibleObj.Chapter}:${bibleObj.Versecount}"
 
                 highlightList.add(highlightObj)
             }
@@ -350,14 +374,17 @@ class HomeAdapter(
             }
 
             override fun publishResults(
-                charSequence: CharSequence,
-                filterResults: FilterResults
+                    charSequence: CharSequence,
+                    filterResults: FilterResults
             ) {
                 list = filterResults.values as ArrayList<BibleModelEntry>
                 notifyDataSetChanged()
             }
         }
+    }
 
+    fun getData(): ArrayList<BibleModelEntry> {
+        return list;
     }
 
     fun updateDataFavData(it: List<FavoriteModelEntry>) {
@@ -369,8 +396,10 @@ class HomeAdapter(
         this.notesList = it
         notifyDataSetChanged()
     }
+
     fun updateDataHighlightsData(it: List<HighlightModelEntry>) {
         this.highlightList = it
         notifyDataSetChanged()
     }
+
 }

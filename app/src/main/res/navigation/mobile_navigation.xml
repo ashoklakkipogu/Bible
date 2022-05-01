@@ -37,9 +37,9 @@
 
 
     <fragment
-        android:id="@+id/navigation_lyric"
-        android:name="com.ashok.bible.ui.lyrics.LyricsFragment"
-        android:label="@string/title_lyrics"
+        android:id="@+id/navigation_quotes"
+        android:name="com.ashok.bible.ui.quotes.QuotesFragment"
+        android:label="@string/title_quotes"
         tools:layout="@layout/fragment_lyrics" />
 
 

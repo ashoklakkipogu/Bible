@@ -9,7 +9,8 @@ import com.ashok.bible.data.remote.ApiService
 import com.ashok.bible.data.remote.NotificationMessagingService
 import com.ashok.bible.data.remote.repositary.AppRepoImp
 import com.google.android.gms.ads.AdRequest
-import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.lakki.kotlinlearning.data.remote.repositary.AppRepository
 import dagger.Module
 import dagger.Provides
@@ -102,16 +103,20 @@ class AppModule {
         return AppRepoImp(apiService, notificationService)
     }
 
-    @Provides
+   /* @Provides
     @Singleton
     fun provideFirebaseAnalytics(app: Application): FirebaseAnalytics {
         return FirebaseAnalytics.getInstance(app)
-    }
+    }*/
 
     @Provides
     @Singleton
     fun provideAdMob(app: Application): AdRequest {
         return AdRequest.Builder().build()
     }
-
+    @Provides
+    @Singleton
+    fun provideFirebaseStorageReference(): StorageReference {
+        return FirebaseStorage.getInstance().reference;
+    }
 }

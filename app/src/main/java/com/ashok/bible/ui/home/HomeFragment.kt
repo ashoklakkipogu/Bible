@@ -1,14 +1,10 @@
 package com.ashok.bible.ui.home
 
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context.NOTIFICATION_SERVICE
-import android.content.Intent
 import android.util.Log
 import android.view.View
-import androidx.core.app.NotificationCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.ashok.bible.R
 import com.ashok.bible.common.AppConstants
 import com.ashok.bible.data.local.entry.*
@@ -19,7 +15,6 @@ import com.ashok.bible.utils.SharedPrefUtils
 import com.ashok.bible.utils.TtsManager
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.gms.ads.AdRequest
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.lakki.kotlinlearning.view.base.BaseFragment
 import java.util.*
 import javax.inject.Inject
@@ -39,8 +34,6 @@ class HomeFragment : BaseFragment<HomeViewModel, FragmentHomeBinding>() {
     var bibleID = -1
     var tts: TtsManager? = null
     var lng: Locale = Locale.US
-    @Inject
-    lateinit var analytics: FirebaseAnalytics
 
     @Inject
     lateinit var adRequest: AdRequest
@@ -55,20 +48,20 @@ class HomeFragment : BaseFragment<HomeViewModel, FragmentHomeBinding>() {
         animation = binding.loadingAnimation
         tts = TtsManager(activity)
         val lang = SharedPrefUtils.getLanguage(pref)
-        when (lang){
-            AppConstants.TELUGU->{
+        when (lang) {
+            AppConstants.TELUGU -> {
                 lng = Locale(AppConstants.TELUGU_IN)
             }
-            AppConstants.TAMIL->{
+            AppConstants.TAMIL -> {
                 lng = Locale(AppConstants.TAMIL_IN)
             }
-            AppConstants.ENGLISH->{
+            AppConstants.ENGLISH -> {
                 lng = Locale(AppConstants.ENGLISH_IN)
             }
         }
         linearLayoutManager = LinearLayoutManager(activity)
         binding.recyclerView.layoutManager = linearLayoutManager
-        adapters = HomeAdapter(this, tts, lng, pref, analytics, bibleModelEntry)
+        adapters = HomeAdapter(this, tts, lng, pref, bibleModelEntry)
         binding.recyclerView.adapter = adapters
         arguments?.let {
             bibleID = it.getInt("BibleID", -1)
@@ -87,9 +80,9 @@ class HomeFragment : BaseFragment<HomeViewModel, FragmentHomeBinding>() {
                 animation.stopShimmer();
                 animation.visibility = View.GONE
                 if (it != null) {
-                    val data = it as ArrayList<BibleModelEntry>
-                    adapters.updateData(data)
-                    if(bibleID!=-1){
+                    bibleModelEntry = it as ArrayList<BibleModelEntry>
+                    adapters.updateData(bibleModelEntry)
+                    if (bibleID != -1) {
                         linearLayoutManager.scrollToPositionWithOffset(bibleID - 1, 0)
                     }
 
@@ -127,16 +120,49 @@ class HomeFragment : BaseFragment<HomeViewModel, FragmentHomeBinding>() {
             })
         }
 
+        onScrollChangetListener();
+    }
 
+    private fun onScrollChangetListener() {
+        binding.recyclerView.addOnScrollListener(object :
+            RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(
+                recyclerView: RecyclerView,
+                newState: Int
+            ) {
+                super.onScrollStateChanged(recyclerView, newState)
+                //some code when initially scrollState changes
+            }
+
+            override fun onScrolled(
+                recyclerView: RecyclerView,
+                dx: Int,
+                dy: Int
+            ) {
+                super.onScrolled(recyclerView, dx, dy)
+                //Some code while the list is scrolling
+                val firstElementPosition =
+                    (binding.recyclerView.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+
+                val bibileList = adapters.getData()
+                if (bibileList.isNotEmpty()){
+                    val book = bibileList[firstElementPosition]
+                    updateBibleIndex(book.Chapter, book.Book, book.Versecount)
+                }
+                Log.i("Position", "........" + firstElementPosition)
+
+            }
+        })
     }
 
     override fun getViewModel(): Class<HomeViewModel> {
         return HomeViewModel::class.java
     }
 
-    fun updateBibleIndex(chapterId: Int, bookID: Int) {
-        (activity as MainActivity).updateToolBar("${bibleIndex[bookID].chapter} ${chapterId}")
+    fun updateBibleIndex(chapterId: Int, bookID: Int, verseId: Int) {
+        (activity as MainActivity).updateToolBar(bibleIndex[bookID].chapter, chapterId, verseId, bookID)
     }
+
 
     fun updateValue(bookId: Int, chapterId: Int, verseId: Int) {
         this.bookId = bookId
@@ -171,4 +197,10 @@ class HomeFragment : BaseFragment<HomeViewModel, FragmentHomeBinding>() {
     fun insertHighlight(highlights: ArrayList<HighlightModelEntry>) {
         viewModel.insertHighlights(highlights)
     }
+
+    private fun RecyclerView.getCurrentPosition(): Int {
+        return (this.layoutManager as LinearLayoutManager?)!!.findFirstVisibleItemPosition()
+    }
+
+
 }

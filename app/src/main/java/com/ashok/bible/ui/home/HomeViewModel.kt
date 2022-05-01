@@ -1,21 +1,11 @@
 package com.ashok.bible.ui.home
 
-import android.app.Activity
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
 import com.ashok.bible.data.local.entry.*
 import com.ashok.bible.data.local.repositary.DbRepository
-import com.ashok.bible.data.remote.model.CarouselModel
 import com.ashok.bible.data.remote.network.ApiError
-import com.ashok.bible.ui.MainActivity
-import com.ashok.bible.ui.bibleindex.BibleIndexActivity
-import com.ashok.bible.ui.favorite.FavoriteFragment
-import com.ashok.bible.ui.highlights.HighlightsFragment
-import com.ashok.bible.ui.notes.NotesFragment
-import com.lakki.kotlinlearning.data.remote.repositary.AppRepository
-import com.lakki.kotlinlearning.view.base.BaseViewModel
+import com.ashok.bible.ui.base.BaseViewModel
 import javax.inject.Inject
 
 class HomeViewModel @Inject constructor(

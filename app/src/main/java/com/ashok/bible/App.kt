@@ -9,13 +9,14 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.multidex.MultiDex
 import com.ashok.bible.common.AppConstants
 import com.ashok.bible.di.component.AppComponent
-import com.ashok.bible.di.component.DaggerAppComponent
+import com.ashok.bible.utils.GlideImageLoader
 import com.ashok.bible.utils.SharedPrefUtils
 import com.ashok.bible.utils.Utils
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasActivityInjector
+import lv.chi.photopicker.ChiliPhotoPicker
 import javax.inject.Inject
 
 class App : Application(), HasActivityInjector {
@@ -30,6 +31,10 @@ class App : Application(), HasActivityInjector {
         super.onCreate()
         initComponent()
         initNotificationSubscribe()
+        ChiliPhotoPicker.init(
+            loader = GlideImageLoader(),
+            authority = "com.ashok.bible.fileprovider"
+        )
     }
 
     private fun initComponent() {

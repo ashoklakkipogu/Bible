@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import com.ashok.bible.R
 import com.ashok.bible.common.AppConstants
 import com.ashok.bible.databinding.ActivityFeedbackBinding
+import com.ashok.bible.ui.admin.BannerPosActivity
+import com.ashok.bible.ui.admin.QuotesPosActivity
 import com.ashok.bible.ui.lyrics.LyricPostActivity
 import com.ashok.bible.ui.notification.NotificationPostActivity
 import com.ashok.bible.utils.SharedPrefUtils
@@ -51,6 +53,12 @@ class FeedbackActivity : BaseActivity<ViewModel,ActivityFeedbackBinding>() {
             }
             R.id.lyric_txt -> {
                 startActivity(Intent(this, LyricPostActivity::class.java))
+            }
+            R.id.banner_txt -> {
+                startActivity(Intent(this, BannerPosActivity::class.java))
+            }
+            R.id.quotes_txt -> {
+                startActivity(Intent(this, QuotesPosActivity::class.java))
             }
         }
     }

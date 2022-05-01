@@ -231,11 +231,81 @@
             app:layout_constraintStart_toStartOf="@+id/guideline4"
             app:layout_constraintTop_toBottomOf="@+id/lyric_txt" />
 
+        <TextView
+            android:id="@+id/banner_txt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:onClick="@{handlers::onClick}"
+            android:text="Banner"
+            android:textColor="@color/color_2"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="@+id/imageView13"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guideline4"
+            app:layout_constraintTop_toTopOf="@+id/imageView13" />
+        <View
+            android:id="@+id/view_6"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:background="@color/color_1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guideline4"
+            app:layout_constraintTop_toBottomOf="@+id/banner_txt" />
+
+        <ImageView
+            android:id="@+id/imageView14"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:tint="@color/color_2"
+            app:layout_constraintEnd_toStartOf="@+id/guideline4"
+            app:layout_constraintTop_toBottomOf="@+id/view_6"
+            app:srcCompat="@drawable/icons_quote" />
+
+        <ImageView
+            android:id="@+id/imageView13"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:tint="@color/color_2"
+            app:layout_constraintEnd_toStartOf="@+id/guideline4"
+            app:layout_constraintTop_toBottomOf="@+id/view_5"
+            app:srcCompat="@drawable/lyrics" />
+
+        <TextView
+            android:id="@+id/quotes_txt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:onClick="@{handlers::onClick}"
+            android:text="@string/title_quotes"
+            android:textColor="@color/color_2"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="@+id/imageView14"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guideline4"
+            app:layout_constraintTop_toTopOf="@+id/imageView14" />
+        <View
+            android:id="@+id/view_7"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:background="@color/color_1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guideline4"
+            app:layout_constraintTop_toBottomOf="@+id/quotes_txt" />
+
         <androidx.constraintlayout.widget.Group
             android:id="@+id/notification_group"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:constraint_referenced_ids="notification_txt,view_4,imageView11, lyric_txt, imageView12, view_5" />
+            android:visibility="visible"
+            app:constraint_referenced_ids="notification_txt,view_4,imageView11, lyric_txt, imageView12, view_5,banner_txt,quotes_txt,view_6,view_7,imageView14,imageView13" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

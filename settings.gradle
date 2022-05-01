@@ -1,2 +1,3 @@
+include ':photopicker'
 rootProject.name='Bible'
 include ':app', ':chat-ui', ':draggablepanel'

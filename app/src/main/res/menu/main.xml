@@ -6,6 +6,6 @@
         android:orderInCategory="100"
         app:iconTint="@color/colorAccent"
         app:showAsAction="ifRoom"
-        android:icon="@drawable/ic_search"
+        android:icon="@drawable/icons_font_size"
         android:title="@string/search" />
 </menu>

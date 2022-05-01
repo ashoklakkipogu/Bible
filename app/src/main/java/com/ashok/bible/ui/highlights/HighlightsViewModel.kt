@@ -2,12 +2,10 @@ package com.ashok.bible.ui.highlights
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import com.ashok.bible.data.local.entry.FavoriteModelEntry
 import com.ashok.bible.data.local.entry.HighlightModelEntry
 import com.ashok.bible.data.local.repositary.DbRepository
 import com.ashok.bible.data.remote.network.ApiError
-import com.ashok.bible.ui.favorite.FavoriteFragment
-import com.lakki.kotlinlearning.view.base.BaseViewModel
+import com.ashok.bible.ui.base.BaseViewModel
 import javax.inject.Inject
 
 class HighlightsViewModel @Inject constructor(

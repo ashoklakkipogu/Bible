@@ -1,4 +1,4 @@
-package com.lakki.kotlinlearning.view.base
+package com.ashok.bible.ui.base
 
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.ViewModel

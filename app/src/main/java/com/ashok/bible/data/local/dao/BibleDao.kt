@@ -26,4 +26,5 @@ interface BibleDao {
 
     @Delete
     fun deleteBibleContent(bible: BibleModelEntry)
+
 }

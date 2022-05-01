@@ -16,6 +16,7 @@ class SharedPrefUtils {
         const val ID = "ID"
         const val DEVICE_NAME = "deviceName"
         const val SUBSCRIBE_NOTIFICATION = "subscribeNotification"
+        const val IS_SAVED_USER_NAME = "isSavedUserName"
 
 
         fun setUserName(pref: SharedPreferences, name:String) {
@@ -26,6 +27,7 @@ class SharedPrefUtils {
         fun getUserName(pref: SharedPreferences):String? {
             return pref.getString(USER_NAME, null)
         }
+
         fun setMobileID(pref: SharedPreferences, name:String) {
             val editor = pref.edit()
             editor.putString(ID, name)
@@ -115,5 +117,16 @@ class SharedPrefUtils {
         fun isSubscribedNotifications(pref: SharedPreferences): Boolean {
             return pref.getBoolean(SUBSCRIBE_NOTIFICATION, false)
         }
+
+        fun setSavedUser(pref: SharedPreferences) {
+            val editor = pref.edit()
+            editor.putBoolean(IS_SAVED_USER_NAME, true)
+            editor.apply()
+        }
+
+        fun isSavedUser(pref: SharedPreferences): Boolean {
+            return pref.getBoolean(IS_SAVED_USER_NAME, false)
+        }
+
     }
 }

@@ -40,10 +40,6 @@ class DialogBuilder {
                 lObjBuilder.dismiss()
                 listener.dialogBookMark()
             }
-            bookMarkView.setOnClickListener {
-                lObjBuilder.dismiss()
-                listener.dialogBookMark()
-            }
             highlightsView.setOnClickListener {
                 lObjBuilder.dismiss()
                 listener.dialogHighLight()

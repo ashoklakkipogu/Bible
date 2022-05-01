@@ -6,7 +6,9 @@ import android.content.Intent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.RelativeLayout
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
@@ -21,6 +23,7 @@ import com.ashok.bible.ui.adapter.BibleIndexAdapter
 import com.ashok.bible.ui.adapter.BibleIndexNumberAdapter
 import com.ashok.bible.utils.LocalizationUtil
 import com.ashok.bible.utils.SharedPrefUtils
+import com.ashok.bible.utils.TtsManager
 import com.ashok.bible.utils.Utils
 import com.lakki.kotlinlearning.view.base.BaseActivity
 import com.miguelcatalan.materialsearchview.MaterialSearchView
@@ -29,24 +32,36 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexBinding>() {
-
+ var data = ""
     var bibleIndex: ArrayList<BibleIndexModelEntry> = ArrayList()
     var bibleChapter: ArrayList<Int> = ArrayList()
     var bibleVerse: ArrayList<Int> = ArrayList()
     lateinit var bibleIndexAdapter: BibleIndexAdapter
-    lateinit var bibleChapterAdapter: BibleIndexNumberAdapter
+    private var bibleChapterAdapter: BibleIndexNumberAdapter? =null
     lateinit var searchView: MaterialSearchView
     var bookId: Int = 0
     var chapterId: Int = 0
     var verseId: Int = 0
     var pageType = 1
+    var selectedPageType = 1
     lateinit var progressBar: ProgressBar
+    var tts: TtsManager? = null
+    var lng: Locale = Locale.US
+
+
+
 
     override fun getLayoutRes(): Int {
         return R.layout.activity_bible_index
     }
 
     override fun init() {
+        chapterId = intent.getIntExtra("chapterId", 0)
+        verseId = intent.getIntExtra("verseId", 0)
+        bookId = intent.getIntExtra("bookId", 0)
+        pageType = intent.getIntExtra("pageType", 1)
+        selectedPageType = pageType
+
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -61,15 +76,41 @@ class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexB
         toolbar.setTitleTextColor(navColor)
         progressBar = binding.progressBar
         progressBar.visibility = View.VISIBLE
-
+        val lang = SharedPrefUtils.getLanguage(pref)
+        when (lang) {
+            AppConstants.TELUGU -> {
+                lng = Locale(AppConstants.TELUGU_IN)
+            }
+            AppConstants.TAMIL -> {
+                lng = Locale(AppConstants.TAMIL_IN)
+            }
+            AppConstants.ENGLISH -> {
+                lng = Locale(AppConstants.ENGLISH_IN)
+            }
+        }
+        tts = TtsManager(this)
         setChapterRecyclerView()
 
         with(viewModel) {
-            getBibleIndex(this@BibleIndexActivity)
+            if (pageType == 3){
+                progressBar.visibility = View.VISIBLE
+                toolbar.title = getString(R.string.verse)
+                pageType = 3
+                Utils.gridRecyclerView(binding.recyclerView, this@BibleIndexActivity, 5)
+                bibleChapterAdapter = BibleIndexNumberAdapter(this@BibleIndexActivity, bibleChapter)
+                binding.recyclerView.adapter = bibleChapterAdapter
+                viewModel.getBibleByBookIdAndChapterId(this@BibleIndexActivity, bookId, chapterId)
+            }else{
+                getBibleIndex(this@BibleIndexActivity)
+            }
+
             bibleIndexData.observe(this@BibleIndexActivity, Observer {
                 progressBar.visibility = View.GONE
-                pageType = 1
                 if (it != null) {
+                    if (pageType == 2) {
+                        val bibleIndexModelEntry = it[bookId]
+                        onclickBook(bibleIndexModelEntry)
+                    }
                     var oldTestament: String = ""
                     var newTestament: String = ""
                     when (SharedPrefUtils.getLanguage(pref)) {
@@ -87,6 +128,8 @@ class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexB
                         }
                     }
 
+
+
                     bibleIndex = it as ArrayList<BibleIndexModelEntry>
                     var bibleIndexModelEntry = BibleIndexModelEntry()
                     SharedPrefUtils.getLanguage(pref)
@@ -96,6 +139,8 @@ class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexB
                     bibleIndexModelEntry.chapter = newTestament
                     bibleIndex.add(40, bibleIndexModelEntry)
                     bibleIndexAdapter.updateData(bibleIndex)
+
+
                 }
             })
             bibleChapters.observe(this@BibleIndexActivity, Observer {
@@ -109,7 +154,7 @@ class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexB
                     } else {
                         it as ArrayList<Int>
                     }
-                    bibleChapterAdapter.updateData(bibleChapter)
+                    bibleChapterAdapter?.updateData(bibleChapter)
                 }
             })
             bibleVerseCount.observe(this@BibleIndexActivity, Observer {
@@ -123,7 +168,7 @@ class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexB
                     } else {
                         it as ArrayList<Int>
                     }
-                    bibleChapterAdapter.updateData(bibleVerse)
+                    bibleChapterAdapter?.updateData(bibleVerse)
                 }
             })
         }
@@ -137,12 +182,12 @@ class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexB
                 if (pageType == 1)
                     bibleIndexAdapter.filter.filter(newText)
                 else
-                    bibleChapterAdapter.filter.filter(newText);
+                    bibleChapterAdapter?.filter?.filter(newText);
                 return false
             }
         })
         toolbar.setNavigationOnClickListener {
-            when (pageType) {
+            /*when (pageType) {
                 1 -> {
                     super.onBackPressed();
                 }
@@ -154,9 +199,10 @@ class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexB
                 3 -> {
                     pageType = 2
                     toolbar.title = getString(R.string.chapter)
-                    bibleChapterAdapter.updateData(bibleChapter)
+                    bibleChapterAdapter?.updateData(bibleChapter)
                 }
-            }
+            }*/
+            onBackPressed();
         }
     }
 
@@ -202,6 +248,13 @@ class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexB
         binding.recyclerView.adapter = bibleChapterAdapter
     }
 
+    fun onclickMic(view: View, obj: BibleIndexModelEntry) {
+        val micView: ImageView = view.findViewById(R.id.mic_btn)
+        speakText(obj.chapter)
+        micView.setImageResource(android.R.drawable.ic_lock_silent_mode_off);
+    }
+
+
     fun onclickChapter(chId: Int) {
         if (pageType != 3) {
             progressBar.visibility = View.VISIBLE
@@ -221,39 +274,53 @@ class BibleIndexActivity : BaseActivity<BibleIndexViewModel, ActivityBibleIndexB
     }
 
     override fun onBackPressed() {
-        when {
-            searchView.isSearchOpen -> {
-                searchView.closeSearch();
+        when(selectedPageType){
+            3 ->{
+                if (searchView.isSearchOpen ){
+                    searchView.closeSearch();
+                }else{
+                    super.onBackPressed();
+                }
             }
-            pageType == 1 -> {
-                super.onBackPressed();
+            2 ->{
+                if (searchView.isSearchOpen ){
+                    searchView.closeSearch();
+                }else if (pageType == 2 ){
+                    super.onBackPressed();
+                }else if (pageType == 3 ){
+                    toolbar.title = getString(R.string.chapter)
+                    pageType = 2
+                    bibleChapterAdapter?.updateData(bibleChapter)
+                }
             }
-            pageType == 2 -> {
-                pageType = 1
-                toolbar.title = getString(R.string.book)
-                setChapterRecyclerView()
-            }
-            pageType == 3 -> {
-                toolbar.title = getString(R.string.chapter)
-                pageType = 2
-                bibleChapterAdapter.updateData(bibleChapter)
+            1 ->{
+                if (searchView.isSearchOpen ){
+                    searchView.closeSearch();
+                }else if (pageType == 1 ){
+                    super.onBackPressed();
+                }else if (pageType == 2 ){
+                    pageType = 1
+                    toolbar.title = getString(R.string.book)
+                    setChapterRecyclerView()
+                }else if (pageType == 3 ){
+                    toolbar.title = getString(R.string.chapter)
+                    pageType = 2
+                    bibleChapterAdapter?.updateData(bibleChapter)
+                }
             }
         }
     }
 
-    /*override fun attachBaseContext(newBase: Context) {
-        val prf = newBase.getSharedPreferences(AppConstants.SHARED_PREF, Context.MODE_PRIVATE)
-        val lan = SharedPrefUtils.getLanguage(prf)
-        when (lan) {
-            AppConstants.TELUGU -> {
-                super.attachBaseContext(LocalizationUtil.applyLanguage(newBase, "te"))
-            }
-            AppConstants.TAMIL -> {
-                super.attachBaseContext(LocalizationUtil.applyLanguage(newBase, "ta"))
-            }
-            else -> {
-                super.attachBaseContext(newBase)
-            }
+    private fun speakText(chapter:String) {
+        if (chapter!!.isNotEmpty()) {
+            tts?.say(chapter, lng)
         }
-    }*/
+
+    }
+
+    override fun onDestroy() {
+        tts?.shutDown()
+        super.onDestroy()
+
+    }
 }

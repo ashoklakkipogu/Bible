@@ -48,6 +48,13 @@ class FavoriteFragment : BaseFragment<FavoriteViewModel, FragmentFavoriteBinding
                 if (it != null) {
                     val data = it.sortedBy {sort-> sort.createdDate }.reversed()
                     favoriteAdapter.updateData(data)
+                    if (data.isEmpty()) {
+                        binding.placeholderLabel.visibility = View.VISIBLE
+                    } else {
+                        binding.placeholderLabel.visibility = View.GONE
+                    }
+                }else{
+                    binding.placeholderLabel.visibility = View.VISIBLE
                 }
             })
             deleteFavorite.observe(this@FavoriteFragment, Observer {
@@ -58,6 +65,7 @@ class FavoriteFragment : BaseFragment<FavoriteViewModel, FragmentFavoriteBinding
             error.observe(this@FavoriteFragment, Observer {
                 animation.stopShimmer();
                 animation.visibility = View.GONE
+                binding.placeholderLabel.visibility = View.VISIBLE
             })
         }
     }

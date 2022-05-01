@@ -149,6 +149,26 @@ class DbRepoImp @Inject constructor(
             )
     }
 
+    override fun getFavById(
+        id:Int,
+        success: (LiveData<FavoriteModelEntry>) -> Unit,
+        failure: (ApiError) -> Unit,
+        terminate: () -> Unit
+    ): Disposable {
+        return Observable
+            .fromCallable { favoriteDao.getFavoritesById(id) }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeWith(
+                ApiDisposable<LiveData<FavoriteModelEntry>>(
+                    {
+                        success(it)
+                    },
+                    failure
+                )
+            )
+    }
+
     override fun getAllHighlights(
         success: (LiveData<List<HighlightModelEntry>>) -> Unit,
         failure: (ApiError) -> Unit,
@@ -179,6 +199,26 @@ class DbRepoImp @Inject constructor(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(
                 ApiDisposable<LiveData<List<NoteModelEntry>>>(
+                    {
+                        success(it)
+                    },
+                    failure
+                )
+            )
+    }
+
+    override fun getNotesById(
+        id: Int,
+        success: (LiveData<NoteModelEntry>) -> Unit,
+        failure: (ApiError) -> Unit,
+        terminate: () -> Unit
+    ): Disposable {
+        return Observable
+            .fromCallable { noteDao.getNotesById(id) }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeWith(
+                ApiDisposable<LiveData<NoteModelEntry>>(
                     {
                         success(it)
                     },
@@ -239,6 +279,26 @@ class DbRepoImp @Inject constructor(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(
                 ApiDisposable<Unit>(
+                    {
+                        success(it)
+                    },
+                    failure
+                )
+            )
+    }
+
+    override fun getHighlightById(
+        id: Int,
+        success: (LiveData<HighlightModelEntry>) -> Unit,
+        failure: (ApiError) -> Unit,
+        terminate: () -> Unit
+    ): Disposable {
+        return Observable
+            .fromCallable { highlightDao.getHighlightById(id) }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeWith(
+                ApiDisposable<LiveData<HighlightModelEntry>>(
                     {
                         success(it)
                     },

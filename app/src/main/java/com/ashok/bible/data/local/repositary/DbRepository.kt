@@ -47,6 +47,13 @@ interface DbRepository {
         failure: (ApiError) -> Unit = {},
         terminate: () -> Unit = {}
     ): Disposable
+    fun getFavById(
+        id:Int,
+        success: (LiveData<FavoriteModelEntry>) -> Unit,
+        failure: (ApiError) -> Unit = {},
+        terminate: () -> Unit = {}
+    ): Disposable
+
     fun getAllHighlights(
         success: (LiveData<List<HighlightModelEntry>>) -> Unit,
         failure: (ApiError) -> Unit = {},
@@ -54,6 +61,13 @@ interface DbRepository {
     ): Disposable
     fun getAllNotes(
         success: (LiveData<List<NoteModelEntry>>) -> Unit,
+        failure: (ApiError) -> Unit = {},
+        terminate: () -> Unit = {}
+    ): Disposable
+
+    fun getNotesById(
+        id:Int,
+        success: (LiveData<NoteModelEntry>) -> Unit,
         failure: (ApiError) -> Unit = {},
         terminate: () -> Unit = {}
     ): Disposable
@@ -78,6 +92,14 @@ interface DbRepository {
         failure: (ApiError) -> Unit = {},
         terminate: () -> Unit = {}
     ): Disposable
+
+    fun getHighlightById(
+        id:Int,
+        success: (LiveData<HighlightModelEntry>) -> Unit,
+        failure: (ApiError) -> Unit = {},
+        terminate: () -> Unit = {}
+    ): Disposable
+
 
     fun deleteHighlight(
         id: Int,

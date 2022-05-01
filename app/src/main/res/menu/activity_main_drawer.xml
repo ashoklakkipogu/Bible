@@ -10,9 +10,9 @@
             android:icon="@drawable/ic_bookmark_24dp"
             android:title="@string/title_home" />
         <item
-            android:id="@+id/navigation_lyric"
-            android:icon="@drawable/lyrics"
-            android:title="@string/title_lyrics" />
+            android:id="@+id/navigation_quotes"
+            android:icon="@drawable/icons_quote"
+            android:title="@string/title_quotes" />
         <item
             android:id="@+id/navigation_language"
             android:icon="@drawable/ic_language"

@@ -3,15 +3,18 @@ package com.ashok.bible.di.module
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.ashok.bible.ui.MainViewModel
+import com.ashok.bible.ui.admin.AdminViewModel
 import com.ashok.bible.ui.base.ViewModelFactory
 import com.ashok.bible.ui.bibleindex.BibleIndexActivity
 import com.ashok.bible.ui.bibleindex.BibleIndexViewModel
+import com.ashok.bible.ui.details.DetailsViewModel
 import com.ashok.bible.ui.favorite.FavoriteViewModel
 import com.ashok.bible.ui.highlights.HighlightsViewModel
 import com.ashok.bible.ui.home.HomeViewModel
 import com.ashok.bible.ui.lyrics.LyricsViewModel
 import com.ashok.bible.ui.notes.NotesViewModel
 import com.ashok.bible.ui.notification.NotificationViewModel
+import com.ashok.bible.ui.quotes.QuotesViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -59,6 +62,21 @@ abstract class ViewModelModule {
     @ViewModelKey(LyricsViewModel::class)
     abstract fun bindLyricsViewModel(lyricsViewModel: LyricsViewModel): ViewModel
 
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(DetailsViewModel::class)
+    abstract fun bindDetailsViewModel(detailsViewModel: DetailsViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(QuotesViewModel::class)
+    abstract fun bindQuotesViewModel(quotesViewModel: QuotesViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(AdminViewModel::class)
+    abstract fun bindAdminViewModel(adminViewModel: AdminViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(viewModelFactory: ViewModelFactory): ViewModelProvider.Factory

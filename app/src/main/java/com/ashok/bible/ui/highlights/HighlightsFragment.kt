@@ -45,6 +45,13 @@ class HighlightsFragment : BaseFragment<HighlightsViewModel, FragmentHighlightsB
                 if (it != null) {
                     val data = it.sortedBy { sort -> sort.createdDate }.reversed()
                     highlightsAdapter.updateData(data)
+                    if (data.isEmpty()) {
+                        binding.placeholderLabel.visibility = View.VISIBLE
+                    } else {
+                        binding.placeholderLabel.visibility = View.GONE
+                    }
+                } else {
+                    binding.placeholderLabel.visibility = View.VISIBLE
                 }
             })
             deleteHighlight.observe(this@HighlightsFragment, Observer {
@@ -55,6 +62,7 @@ class HighlightsFragment : BaseFragment<HighlightsViewModel, FragmentHighlightsB
             error.observe(this@HighlightsFragment, Observer {
                 animation.stopShimmer();
                 animation.visibility = View.GONE
+                binding.placeholderLabel.visibility = View.VISIBLE
             })
         }
     }

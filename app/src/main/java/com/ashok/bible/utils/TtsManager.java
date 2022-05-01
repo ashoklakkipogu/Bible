@@ -14,7 +14,6 @@ import java.util.Locale;
 import java.util.Set;
 
 public class TtsManager {
-
     private final static int SDK = Build.VERSION.SDK_INT;
 
     private final static String TAG = "TTS-TTSManager";

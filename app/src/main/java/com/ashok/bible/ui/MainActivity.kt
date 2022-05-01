@@ -29,11 +29,11 @@ import com.ashok.bible.common.AppConstants
 import com.ashok.bible.data.local.entry.FavoriteModelEntry
 import com.ashok.bible.data.local.entry.HighlightModelEntry
 import com.ashok.bible.data.local.entry.NoteModelEntry
+import com.ashok.bible.data.remote.model.UserModel
 import com.ashok.bible.databinding.ActivityMainBinding
 import com.ashok.bible.ui.bibleindex.BibleIndexActivity
 import com.ashok.bible.ui.feedback.FeedbackActivity
 import com.ashok.bible.ui.home.HomeFragment
-import com.ashok.bible.ui.lyrics.LyricsFragment
 import com.ashok.bible.utils.DialogBuilder
 import com.ashok.bible.utils.DialogListenerForName
 import com.ashok.bible.utils.SharedPrefUtils
@@ -41,7 +41,6 @@ import com.ashok.bible.utils.Utils
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.lakki.kotlinlearning.view.base.BaseActivity
@@ -54,22 +53,29 @@ import javax.inject.Inject
 
 
 class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
-    HasSupportFragmentInjector {
+        HasSupportFragmentInjector {
     @Inject
     lateinit var fragmentAndroidInjector: DispatchingAndroidInjector<Fragment>
-    @Inject
-    lateinit var firebaseAnalytics: FirebaseAnalytics
+
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var navController: NavController
     public lateinit var searchView: MaterialSearchView
     lateinit var titleView: ConstraintLayout
     lateinit var titleText: TextView
+    lateinit var chapterText: TextView
+    lateinit var verseText: TextView
     lateinit var darkModeSwitch: SwitchCompat
     public var actionSearch: MenuItem? = null
     lateinit var navShare: MenuItem
     lateinit var navFeedback: MenuItem
     lateinit var navLanguage: MenuItem
     private var isSearch = false
+
+    private var chapterId: Int = 0
+    private var verseId: Int = 0
+    private var bookId: Int = 0
+
+
     override fun getLayoutRes(): Int {
         return R.layout.activity_main
     }
@@ -79,8 +85,10 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         searchView = findViewById(R.id.search_view)
         titleView = findViewById(R.id.title_view)
         titleText = findViewById(R.id.title_text)
+        chapterText = findViewById(R.id.chapter_text)
+        verseText = findViewById(R.id.verse_text)
         darkModeSwitch =
-            main_navigation_view.menu.findItem(R.id.nav_darkmode_id).actionView as SwitchCompat
+                main_navigation_view.menu.findItem(R.id.nav_darkmode_id).actionView as SwitchCompat
         navShare = main_navigation_view.menu.findItem(R.id.navigation_share)
         navFeedback = main_navigation_view.menu.findItem(R.id.navigation_feedback)
         navLanguage = main_navigation_view.menu.findItem(R.id.navigation_language)
@@ -90,30 +98,64 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         navController = findNavController(R.id.main_nav_host) //Initialising navController
 
         appBarConfiguration = AppBarConfiguration.Builder(
-            R.id.navigation_home,
-            R.id.navigation_highlights,
-            R.id.navigation_bookmark,
-            R.id.navigation_notes,
-            R.id.navigation_settings,
-            R.id.navigation_lyric
+                R.id.navigation_home,
+                R.id.navigation_highlights,
+                R.id.navigation_bookmark,
+                R.id.navigation_notes,
+                R.id.navigation_settings,
+                R.id.navigation_quotes
         ) //Pass the ids of fragments from nav_graph which you d'ont want to show back button in toolbar
-            .setDrawerLayout(main_drawer_layout) //Pass the drawer layout id from activity xml
-            .build()
+                .setDrawerLayout(main_drawer_layout) //Pass the drawer layout id from activity xml
+                .build()
 
         setupActionBarWithNavController(
-            navController,
-            appBarConfiguration
+                navController,
+                appBarConfiguration
         ) //Setup toolbar with back button and drawer icon according to appBarConfiguration
 
         visibilityNavElements(navController) //If you want to hide drawer or bottom navigation configure that in this function
         initSavedData()
-        titleView.setOnClickListener {
-            startActivityForResult(
-                Intent(this, BibleIndexActivity::class.java),
-                AppConstants.PAGE_INDEX_REQUEST_CODE
+        titleText.setOnClickListener {
+            val intent = Intent(this, BibleIndexActivity::class.java)
+            intent.putExtra("chapterId", chapterId)
+            intent.putExtra("verseId", verseId)
+            intent.putExtra("bookId", bookId)
+            intent.putExtra("pageType", 1)
+            startActivityForResult(intent,
+                    AppConstants.PAGE_INDEX_REQUEST_CODE
             )
         }
+
+        chapterText.setOnClickListener {
+            val intent = Intent(this, BibleIndexActivity::class.java)
+            intent.putExtra("chapterId", chapterId)
+            intent.putExtra("verseId", verseId)
+            intent.putExtra("bookId", bookId)
+            intent.putExtra("pageType", 2)
+            startActivityForResult(intent,
+                    AppConstants.PAGE_INDEX_REQUEST_CODE
+            )
+        }
+
+        verseText.setOnClickListener {
+            val intent = Intent(this, BibleIndexActivity::class.java)
+            intent.putExtra("chapterId", chapterId)
+            intent.putExtra("verseId", verseId)
+            intent.putExtra("bookId", bookId)
+            intent.putExtra("pageType", 3)
+            startActivityForResult(intent,
+                    AppConstants.PAGE_INDEX_REQUEST_CODE
+            )
+        }
+        val name = SharedPrefUtils.getUserName(pref)
         with(viewModel) {
+            if (!SharedPrefUtils.isSavedUser(pref) && name != null) {
+                val obj = UserModel()
+                obj.createdDate = Utils.getCurrentTime()
+                obj.userName = name
+                obj.language = SharedPrefUtils.getLanguage(pref)!!
+                saveUser(obj)
+            }
             insertHighlight.observe(this@MainActivity, Observer {
                 SharedPrefUtils.removeData(pref, SharedPrefUtils.HIGHLIGHT_MODEL)
             })
@@ -123,12 +165,14 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
             insertNotes.observe(this@MainActivity, Observer {
                 SharedPrefUtils.removeData(pref, SharedPrefUtils.NOTE_MODEL)
             })
+            userData.observe(this@MainActivity, Observer {
+                SharedPrefUtils.setSavedUser(pref)
+            })
             error.observe(this@MainActivity, Observer {
 
             })
         }
         searchQuery()
-        val name = SharedPrefUtils.getUserName(pref)
         if (name == null)
             initDialogName()
 
@@ -139,19 +183,19 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
 
     private fun initDialogName() {
         DialogBuilder.showNameDialog(
-            this,
-            object : DialogListenerForName {
-                override fun dialogName(string: String) {
-                    SharedPrefUtils.setUserName(pref, string)
-                    firebaseAnalytics.setUserProperty(AppConstants.USER_NAME, string)
-                }
-            })
+                this,
+                object : DialogListenerForName {
+                    override fun dialogName(string: String) {
+                        SharedPrefUtils.setUserName(pref, string)
+                        //firebaseAnalytics.setUserProperty(AppConstants.USER_NAME, string)
+                    }
+                })
     }
 
     private fun searchQuery() {
 
         searchView.setOnQueryTextListener(object :
-            MaterialSearchView.OnQueryTextListener {
+                MaterialSearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean { //Do some magic
                 val fragment = main_nav_host?.childFragmentManager?.primaryNavigationFragment
                 if (fragment is HomeFragment) {
@@ -163,9 +207,9 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
 
             override fun onQueryTextChange(newText: String): Boolean {
                 val fragment = main_nav_host?.childFragmentManager?.primaryNavigationFragment
-                if (fragment is LyricsFragment) {
+                /*if (fragment is LyricsFragment) {
                     fragment.updateSearch(newText)
-                }
+                }*/
                 isSearch = true
                 return false
             }
@@ -189,38 +233,38 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         // Checks that the platform will allow the specified type of update.
         appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
             if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
-                // For a flexible update, use AppUpdateType.FLEXIBLE
-                && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+                    // For a flexible update, use AppUpdateType.FLEXIBLE
+                    && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
             ) {
                 try {
                     appUpdateManager.startUpdateFlowForResult(
-                        // Pass the intent that is returned by 'getAppUpdateInfo()'.
-                        appUpdateInfo,
-                        // Or 'AppUpdateType.FLEXIBLE' for flexible updates.
-                        AppUpdateType.IMMEDIATE,
-                        // The current activity making the update request.
-                        this,
-                        // Include a request code to later monitor this update request.
-                        AppConstants.UPDATE_REQUEST_CODE
+                            // Pass the intent that is returned by 'getAppUpdateInfo()'.
+                            appUpdateInfo,
+                            // Or 'AppUpdateType.FLEXIBLE' for flexible updates.
+                            AppUpdateType.IMMEDIATE,
+                            // The current activity making the update request.
+                            this,
+                            // Include a request code to later monitor this update request.
+                            AppConstants.UPDATE_REQUEST_CODE
                     );
                 } catch (e: IntentSender.SendIntentException) {
                     e.printStackTrace();
                 }
             } else if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
-                // For a flexible update, use AppUpdateType.FLEXIBLE
-                && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
+                    // For a flexible update, use AppUpdateType.FLEXIBLE
+                    && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
             ) {
 
                 try {
                     appUpdateManager.startUpdateFlowForResult(
-                        // Pass the intent that is returned by 'getAppUpdateInfo()'.
-                        appUpdateInfo,
-                        // Or 'AppUpdateType.FLEXIBLE' for flexible updates.
-                        AppUpdateType.FLEXIBLE,
-                        // The current activity making the update request.
-                        this,
-                        // Include a request code to later monitor this update request.
-                        AppConstants.UPDATE_REQUEST_CODE
+                            // Pass the intent that is returned by 'getAppUpdateInfo()'.
+                            appUpdateInfo,
+                            // Or 'AppUpdateType.FLEXIBLE' for flexible updates.
+                            AppUpdateType.FLEXIBLE,
+                            // The current activity making the update request.
+                            this,
+                            // Include a request code to later monitor this update request.
+                            AppConstants.UPDATE_REQUEST_CODE
                     );
                 } catch (e: IntentSender.SendIntentException) {
                     e.printStackTrace();
@@ -244,11 +288,11 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
                     actionSearch?.isVisible = true
                     showBothNavigation()
                 }
-                R.id.navigation_lyric -> {
+                /* R.id.navigation_lyric -> {
                     titleView.visibility = View.GONE
                     actionSearch?.isVisible = true
                     showBothNavigation()
-                }
+                }*/
                 R.id.navigation_share -> {
                     Utils.shareApp(this)
                 }
@@ -298,8 +342,8 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
 
     override fun onSupportNavigateUp(): Boolean { //Setup appBarConfiguration for back arrow
         return NavigationUI.navigateUp(
-            navController,
-            appBarConfiguration
+                navController,
+                appBarConfiguration
         ) || super.onSupportNavigateUp()
     }
 
@@ -311,33 +355,34 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
             searchView.isSearchOpen -> {
                 searchView.closeSearch()
             }
-            isSearch-> {
+            isSearch -> {
                 when (val fragment = main_nav_host?.childFragmentManager?.primaryNavigationFragment) {
                     is HomeFragment -> {
                         isSearch = false
                         fragment.updateSearch("")
                     }
-                    is LyricsFragment -> {
+                    /*is LyricsFragment -> {
                         isSearch = false
                         fragment.updateSearch("")
-                    }
+                    }*/
                     else -> {
                         super.onBackPressed()
                     }
                 }
             }
             else -> {
-                val fragment = main_nav_host?.childFragmentManager?.primaryNavigationFragment
-                if(fragment is LyricsFragment){
-                    if(fragment.isOpenDraggablePanel){
-                        fragment.onBackPressed()
-                    }else {
-                        super.onBackPressed() //If drawer is already in closed condition then go back
-                    }
+                /* val fragment = main_nav_host?.childFragmentManager?.primaryNavigationFragment
+                 if(fragment is LyricsFragment){
+                     if(fragment.isOpenDraggablePanel){
+                         fragment.onBackPressed()
+                     }else {
+                         super.onBackPressed() //If drawer is already in closed condition then go back
+                     }
 
-                }else{
-                    super.onBackPressed() //If drawer is already in closed condition then go back
-                }
+                 }else{
+                     super.onBackPressed() //If drawer is already in closed condition then go back
+                 }*/
+                super.onBackPressed()
             }
         }
     }
@@ -355,8 +400,19 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         navController.navigate(R.id.navigation_home, bundle)
     }
 
-    fun updateToolBar(title: String) {
+    fun updateToolBar(title: String, chapterId: Int, verseId: Int, bookId: Int) {
+        titleText.visibility = View.VISIBLE
+        chapterText.visibility = View.VISIBLE
+        verseText.visibility = View.VISIBLE
+
         titleText.text = title
+        chapterText.text = chapterId.toString()
+        verseText.text = verseId.toString()
+        this.chapterId = chapterId
+        this.verseId = verseId
+        this.bookId = bookId
+
+
     }
 
     private fun initSavedData() {
@@ -366,7 +422,7 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         highLightsList?.let {
             val collectionType = object : TypeToken<ArrayList<HighlightModelEntry>>() {}.type
             val data =
-                Gson().fromJson(highLightsList, collectionType) as ArrayList<HighlightModelEntry>
+                    Gson().fromJson(highLightsList, collectionType) as ArrayList<HighlightModelEntry>
             viewModel.insertHighlights(data)
         }
         favList?.let {

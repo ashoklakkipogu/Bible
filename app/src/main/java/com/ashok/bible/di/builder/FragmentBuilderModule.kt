@@ -9,6 +9,7 @@ import com.ashok.bible.ui.lyrics.LyricsFirstLangFragment
 import com.ashok.bible.ui.lyrics.LyricsFragment
 import com.ashok.bible.ui.lyrics.LyricsSecondLangFragment
 import com.ashok.bible.ui.notes.NotesFragment
+import com.ashok.bible.ui.quotes.QuotesFragment
 import com.ashok.bible.ui.settings.SettingsFragment
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
@@ -39,6 +40,9 @@ abstract class FragmentBuilderModule {
 
     @ContributesAndroidInjector
     internal abstract fun lyricsSecondLangFragment(): LyricsSecondLangFragment
+
+    @ContributesAndroidInjector
+    internal abstract fun quotesFragment(): QuotesFragment
 
     @ContributesAndroidInjector
     internal abstract fun one(): One
